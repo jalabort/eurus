@@ -66,4 +66,4 @@ class Box(object):
             ``(4,)`` array containing the x, y, w, h coordinates of the
             bounding box.
         """
-        return np.asarray([self.x, self.y, self.w, self.h])
+        return np.array([self.x, self.y, self.w, self.h])

@@ -1,54 +1,18 @@
-FROM hudl/ffmpeg:latest
+FROM hudl/opencv:latest
 MAINTAINER Joan Alabort <joan.alabort@hudl.com>
 
-RUN apt-get update && apt-get install -y \
-    cmake \
-    gfortran \
-    libatlas-base-dev \
-    wget
+RUN apt-get update -y && apt-get install python-qt4 -y
+RUN mkdir -p /root/.config/matplotlib && echo "backend: agg\n" > /root/.config/matplotlib/matplotlibrc
 
-RUN apt-get install software-properties-common -y && \
-    add-apt-repository ppa:george-edison55/cmake-3.x && \
-    apt-get update && \
-    apt-get upgrade cmake -y
+RUN mkdir -p /root/.pip/ && printf "[global]\nindex-url = http://pypi.hudltools.com\ntrusted-host = pypi.hudltools.com\n" >> /root/.pip/pip.conf
 
-RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O install_miniconda.sh && \
-    /bin/bash install_miniconda.sh -b -p /opt/conda && \
-    rm install_miniconda.sh
-ENV PATH /opt/conda/bin:$PATH
-RUN conda install numpy==1.12.0 -y
+WORKDIR /eurus
+RUN pip install https://s3.amazonaws.com/pytorch/whl/cu75/torch-0.1.9.post2-cp36-cp36m-linux_x86_64.whl
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-WORKDIR /
-RUN git clone https://github.com/Itseez/opencv.git
-WORKDIR /opencv
-RUN git checkout tags/3.2.0
+COPY eurus eurus
+COPY setup.py .
+RUN pip install -e .
 
-WORKDIR /
-RUN git clone https://github.com/Itseez/opencv_contrib.git
-WORKDIR /opencv_contrib
-RUN git checkout tags/3.2.0
-
-WORKDIR /opencv
-RUN cmake -D CMAKE_BUILD_TYPE=Release \
-    -D CMAKE_INSTALL_PREFIX=/opt/opencv \
-    -D OPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
-    -D BUILD_opencv_python3=True \
-    -D OPENCV_FORCE_PYTHON_LIBS=True \
-    -D PYTHON3_INCLUDE_DIR=/opt/conda/include/python3.6m \
-    -D PYTHON3_LIBRARY=/opt/conda/lib/libpython3.6m.so \
-    -D PYTHON3_EXECUTABLE=/opt/conda/bin/python3.6 \
-    -D PYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/pkgs/numpy-1.12.0-py36_0/lib/python3.6/site-packages/numpy/core/include \
-    -D PYTHON3_PACKAGES_PATH=/opt/conda/lib/python3.6/site-packages \
-    -D BUILD_EXAMPLES=False \
-    -D INSTALL_PYTHON_EXAMPLES=False \
-    -D INSTALL_C_EXAMPLES=False \
-    -D BUILD_DOCS=False \
-    -D BUILD_TESTS=False \
-    -D BUILD_PERF_TESTS=False \
-    .
-
-RUN make && make install && \
-    ldconfig && \
-    cd .. && \
-    rm -rf opencv && \
-    rm -rf opencv_contrib
+WORKDIR /eurus/eurus

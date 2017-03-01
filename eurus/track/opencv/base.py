@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 from eurus.utils import Box
 from eurus.track.base import Tracker
@@ -14,10 +15,14 @@ class OpenCvTracker(Tracker):
     def initialize(self, image, box):
         r"""
         """
-        self.tracker.add(image, [box.to_numpy()])
+        h, w, _ = image.shape
+        image_coords = np.int64(box.to_numpy() * np.array([[w, h] * 2]))
+        self.tracker.add(image, [image_coords])
 
     def track(self, image, current_time):
         r"""
         """
-        _, coordinates = self.tracker.update(image)
-        return Box(*coordinates[0], current_time)
+        _, image_coords = self.tracker.update(image)
+        h, w, _ = image.shape
+        relative_coords = image_coords / np.asarray([[w, h] * 2])
+        return Box(*relative_coords[0], current_time)

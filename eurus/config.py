@@ -43,7 +43,7 @@ class ServerConfig(Config):
         r"""
         Timestamp in milliseconds where tracking needs to start.
 
-        :rtype: int
+        :rtype: float
         """
         return self.RequiredConfig()
 
@@ -53,6 +53,6 @@ class ServerConfig(Config):
         r"""
         Timestamp in milliseconds where tracking needs to end.
 
-        :rtype: int
+        :rtype: float
         """
         return self.RequiredConfig()
