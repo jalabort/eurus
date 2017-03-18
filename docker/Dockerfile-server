@@ -1,5 +1,17 @@
 FROM hudl/eurus-base:latest
 MAINTAINER Joan Alabort <joan.alabort@hudl.com>
 
+RUN mkdir -p /root/.pip/ && printf "[global]\nindex-url = http://pypi.hudltools.com\ntrusted-host = pypi.hudltools.com\n" >> /root/.pip/pip.conf
+
+WORKDIR /eurus
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY eurus eurus
+COPY setup.py .
+RUN pip install -e .
+
+WORKDIR /eurus/eurus
+
 EXPOSE 8000
 ENTRYPOINT ["gunicorn", "server:app"]

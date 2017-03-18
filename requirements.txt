@@ -13,5 +13,5 @@ matplotlib
 jupyter
 ipywidgets
 
-elementary==0.0.0
-terrarium==0.1.5
+elementary==0.0.4
+terrarium==0.1.6
