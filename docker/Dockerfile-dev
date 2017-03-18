@@ -12,4 +12,4 @@ RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension
 WORKDIR /
 
 EXPOSE 8888 22 6006
-CMD jupyter notebook --no-browser --ip '*' --log-level 'DEBUG'
+ENTRYPOINT ["/bin/sh", "-c", "jupyter notebook --no-browser --ip '*' --log-level 'DEBUG'"]
