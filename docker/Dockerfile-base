@@ -47,4 +47,4 @@ RUN make -j 8 && make install && \
 
 RUN ln /dev/null /dev/raw1394
 
-RUN conda install pytorch torchvision -c soumith
+RUN conda install -c soumith pytorch torchvision cuda80 -y
