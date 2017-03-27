@@ -1,8 +1,6 @@
 FROM hudl/eurus-base:latest
 MAINTAINER Joan Alabort <joan.alabort@hudl.com>
 
-RUN mkdir -p /root/.pip/ && printf "[global]\nindex-url = http://pypi.hudltools.com\ntrusted-host = pypi.hudltools.com\n" >> /root/.pip/pip.conf
-
 WORKDIR /eurus
 COPY requirements.txt .
 RUN pip install -r requirements.txt

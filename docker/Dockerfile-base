@@ -1,17 +1,6 @@
 FROM hudl/ffmpeg-gpu
 MAINTAINER Joan Alabort <joan.alabort@hudl.com>
 
-#RUN apt-get update && apt-get install -y \
-#    cmake \
-#    gfortran \
-#    libatlas-base-dev \
-#    wget
-
-#RUN apt-get install software-properties-common -y && \
-#    add-apt-repository ppa:george-edison55/cmake-3.x && \
-#    apt-get update && \
-#    apt-get upgrade cmake -y
-
 RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O install_miniconda.sh && \
     /bin/bash install_miniconda.sh -b -p /opt/conda && \
     rm install_miniconda.sh
@@ -61,5 +50,7 @@ RUN make -j 8 && make install && \
 RUN ln /dev/null /dev/raw1394
 
 RUN conda install -c soumith pytorch torchvision cuda80 -y
+
+RUN mkdir -p /root/.pip/ && printf "[global]\nindex-url = http://pypi.hudltools.com\ntrusted-host = pypi.hudltools.com\n" >> /root/.pip/pip.conf
 
 ENTRYPOINT ["/bin/bash"]

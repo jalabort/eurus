@@ -4,9 +4,9 @@ MAINTAINER Joan Alabort <joan.alabort@hudl.com>
 RUN apt-get update -y && apt-get install python-qt4 -y
 RUN mkdir -p /root/.config/matplotlib && echo "backend: agg\n" > /root/.config/matplotlib/matplotlibrc
 
-RUN mkdir -p /root/.pip/ && printf "[global]\nindex-url = http://pypi.hudltools.com\ntrusted-host = pypi.hudltools.com\n" >> /root/.pip/pip.conf
-
-RUN pip install jupyter==1.0.0
+RUN pip install jupyter==1.0.0 ipywidgets==6.0.0 ipython-genutils==0.2.0
+RUN mkdir ~/.jupyter
+COPY docker/jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
 RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension
 
 WORKDIR /
