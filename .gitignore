@@ -95,3 +95,5 @@ ENV/
 
 ### JetBrains template
 .idea/
+
+docker/jupyter_notebook_config.py
