@@ -32,7 +32,7 @@ class Uav123(TrackingDataset):
     M. Mueller, et al. "A Benchmark and Simulator for UAV Tracking". ECCV 2016.
     """
     def __init__(self, root, transform=None, target_transform=None,
-                 sequence_length=10, skip=1, context_factor=3,
+                 sequence_length=None, skip=None, context_factor=3,
                  search_factor=2, context_size=128, search_size=256):
 
         super(Uav123, self).__init__(
@@ -79,6 +79,9 @@ class Uav123(TrackingDataset):
                 'The number of image ({}) and annotations ({}) ' \
                 'in sequences {} should be the same.'.format(
                     len(img_list2), len(ann_list2), i)
+
+        if sequence_length is None:
+            self.sequence_length = self.n_shortest - 1
 
     @property
     def _n_elements_per_sequence(self):

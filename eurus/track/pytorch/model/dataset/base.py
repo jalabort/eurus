@@ -1,8 +1,8 @@
 import numbers
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
-
-from abc import ABCMeta, abstractmethod, abstractproperty
+from scipy.stats import multivariate_normal
 
 from PIL import Image
 from torch.utils.data import Dataset
@@ -37,14 +37,15 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
     M. Mueller, et al. "A Benchmark and Simulator for UAV Tracking". ECCV 2016.
     """
     def __init__(self, root, transform=None, target_transform=None,
-                 sequence_length=10, skip=1, context_factor=3,
+                 sequence_length=None, skip=None, context_factor=3,
                  search_factor=2, context_size=128, search_size=256):
 
         self.root = root
         self.transform = transform
         self.target_transform = target_transform
         self.sequence_length = sequence_length
-        self.skip = skip
+        if skip is None:
+            self.skip = 1
 
         self.context_factor = context_factor
         self.search_factor = search_factor
@@ -156,14 +157,39 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
             aux_sz = img1_box[2:] / ratio2
             search_context_box = np.concatenate([aux_tl, aux_sz])
 
+            search_tr = search_tl + np.array([search_sz[0], 0])
+            search_br = search_tl + np.array([0, search_sz[1]])
+            search_bl = search_tl + search_sz
+            box_matrix = np.concatenate([[search_tl], [search_tr],
+                                         [search_br], [search_bl]])
+
+            mean = search_tl + search_sz / 2
+            cov = np.cov(box_matrix, rowvar=False)
+
+            x, y = np.mgrid[:search.size[1], :search.size[0]]
+            pos = np.empty(x.shape + (2,))
+            pos[:, :, 0] = y
+            pos[:, :, 1] = x
+            rv = multivariate_normal(mean, cov)
+            score_map = rv.pdf(pos)
+
+            context_box = context_box.astype(np.float32)
+            search_box = search_box.astype(np.float32)
+            search_context_box = search_context_box.astype(np.float32)
+            score_map = score_map.astype(np.float32)
+
             if self.transform is not None:
                 context = self.transform(context)
                 search = self.transform(search)
             if self.target_transform is not None:
                 context_box = self.target_transform(context_box)
                 search_box = self.target_transform(search_box)
+                search_context_box = self.target_transform(search_context_box)
+                score_map = self.target_transform(score_map)
 
-            yield context, search, context_box, search_box, search_context_box
+            yield (context, search,
+                   context_box, search_box,
+                   search_context_box, score_map)
 
     def view_original(self):
         r"""

@@ -30,12 +30,12 @@ class Alov300(TrackingDataset):
 
     References
     ----------
-    A. W. Smeulders, et al. "Visual tracking: An experimental survey'.
+    A. W. Smeulders, et al. "Visual tracking: An experimental survey".
     TPAMI 2013.
     """
     def __init__(self, root, transform=None, target_transform=None,
-                 sequence_length=2, skip=1, context_factor=3, search_factor=2,
-                 context_size=128, search_size=256):
+                 sequence_length=None, skip=None, context_factor=3,
+                 search_factor=2, context_size=128, search_size=256):
 
         super(Alov300, self).__init__(
             root, transform=transform, target_transform=target_transform,
@@ -102,6 +102,9 @@ class Alov300(TrackingDataset):
                     'sequence {} of group {} should be the same.'.format(
                         len(img_list3), len(ann_list3), j, i)
 
+        if sequence_length is None:
+            self.sequence_length = self.n_shortest - 1
+
     @property
     def _n_elements_per_sequence(self):
         return [len(sequence) for group in self.img_list for sequence in group]
@@ -152,7 +155,9 @@ class Alov300(TrackingDataset):
             if found:
                 break
 
-        first = np.random.randint(0, len(img_sequence) - self.sequence_length)
-        last = first + self.sequence_length
+        first = np.random.randint(
+            0, len(img_sequence) - self.sequence_length * self.skip)
+        last = first + self.sequence_length * self.skip
 
-        return img_sequence[first:last], ann_sequence[first:last]
+        return (img_sequence[first:last:self.skip],
+                ann_sequence[first:last:self.skip])
