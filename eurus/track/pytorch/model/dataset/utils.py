@@ -18,7 +18,7 @@ def crop(img, center, size):
 
     Returns
     -------
-    cropped_img: np.ndarray
+    cropped_img: PIL.Image.Image
         The cropped image.
     """
     x, y = center

@@ -209,7 +209,7 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
 
     def __str__(self):
         return ('{} dataset:\n'
-                '  - # of sequences: {}\n'
+                '  - Number of sequences: {}\n'
                 '    - Shortest sequence length: {}\n'
                 '    - Longest sequence length:  {}\n'
                 '    - Average sequence length:  {}\n'
