@@ -3,7 +3,7 @@ import csv
 
 import numpy as np
 
-from eurus.track.pytorch.model.dataset.base import TrackingDataset
+from eurus.track.pytorch.train.dataset.base import TrackingDataset
 
 
 class Uav123(TrackingDataset):

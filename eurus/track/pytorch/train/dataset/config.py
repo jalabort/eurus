@@ -1,10 +1,10 @@
 from terrarium import Config, config_value
 
 
-class TrackingDatasetConfig(Config):
+class DatasetConfig(Config):
     r"""
     Configuration for creating a 
-    :class:`eurus.track.pytorch.model.dataset.TrackingDataset`.
+    :class:`eurus.track.pytorch.train.dataset.TrackingDataset`.
     """
     @property
     @config_value

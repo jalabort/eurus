@@ -9,12 +9,12 @@ def create_dataset(config):
     
     Parameters
     ----------
-    config : :class:`eurus.track.pytorch.model.dataset.config.TrackingDatasetConfig`
+    config : :class:`eurus.track.pytorch.train.dataset.config.DatasetConfig`
         The configuration for the tracking dataset we're creating.
         
     Returns
     -------
-    tracker : :class:`eurus.track.pytorch.model.dataset.TrackingDataset`
+    tracker : :class:`eurus.track.pytorch.train.dataset.TrackingDataset`
         An instance of the tracking dataset created from config.
     """
     if isinstance(config, Alov300Config):

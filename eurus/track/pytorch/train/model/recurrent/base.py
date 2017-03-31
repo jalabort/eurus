@@ -2,12 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from eurus.track.pytorch.train.model.base import TrackingModel
 
-class HudlNet(nn.Module):
+
+class RecurrentTrackingModel(TrackingModel):
     r"""
     """
     def __init__(self):
-        super(HudlNet, self).__init__()
+        super(RecurrentTrackingModel, self).__init__()
 
         self.conv1 = nn.Conv2d(3, 16, 3)
         self.bn11 = nn.BatchNorm2d(16)

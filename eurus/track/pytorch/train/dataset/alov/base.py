@@ -3,8 +3,8 @@ import csv
 
 import numpy as np
 
-from eurus.track.pytorch.model.dataset.base import TrackingDataset
-from eurus.track.pytorch.model.dataset.widgets.exception import (
+from eurus.track.pytorch.train.dataset.base import TrackingDataset
+from eurus.track.pytorch.train.dataset.widgets.exception import (
     IPythonWidgetsMissingError)
 
 

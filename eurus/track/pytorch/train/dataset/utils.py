@@ -87,7 +87,9 @@ def display_search_image(img, box, context_box, figure_size=(16, 9),
     fig, ax = plt.subplots(1, figsize=figure_size)
     ax.set_axis_off()
     ax.imshow(img)
-    ax.scatter(int(img.size[1] / 2), int(img.size[0] / 2), marker='x')
+    ax.scatter(int(np.array(img).shape[1] / 2),
+               int(np.array(img).shape[0] / 2),
+               marker='x')
     box = patches.Rectangle((box[0], box[1]), box[2], box[3],
                             color=color_box, fill=fill, alpha=alpha)
     ax.add_patch(box)

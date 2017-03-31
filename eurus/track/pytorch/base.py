@@ -8,11 +8,11 @@ from torchvision import transforms
 from eurus.utils import Box
 from eurus.track.base import Tracker
 
-from .model.base import HudlNet
-from .model.dataset.utils import crop
+from .train.model import ForwardTrackingModel
+from .train.dataset.utils import crop
 
 
-class HudlTracker(Tracker):
+class ForwardTracker(Tracker):
     r"""
     Tracker class based on Deep Neural Networks.
     
@@ -22,7 +22,7 @@ class HudlTracker(Tracker):
         
     """
     def __init__(self, resume):
-        self.model = HudlNet()
+        self.model = ForwardTrackingModel()
 
         state_dict = torch.load(resume)
         self.model.load_state_dict(state_dict)
@@ -109,11 +109,13 @@ class HudlTracker(Tracker):
         search = Variable(search, volatile=True).unsqueeze(0)
         search = search.cuda()
 
-        (_, response,
-         self.context_state,
-         self.search_state) = self.model.forward(self.context, search,
-                                                 self.context_state,
-                                                 self.search_state)
+        # (_, response,
+        #  self.context_state,
+        #  self.search_state) = self.model.forward(self.context, search,
+        #                                          self.context_state,
+        #                                          self.search_state)
+
+        response = self.model.forward(self.context, search)
 
         response = response.squeeze().cpu().data.numpy()
         peak = np.array(np.unravel_index(np.argmax(response), response.shape))
