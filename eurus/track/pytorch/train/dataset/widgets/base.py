@@ -2,7 +2,7 @@ import ipywidgets as widgets
 
 from PIL import Image
 
-from eurus.track.pytorch.model.dataset.utils import display_image
+from eurus.track.pytorch.train.dataset.utils import display_image
 
 
 def notebook_view_sequence(img_list, ann_list):
