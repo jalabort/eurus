@@ -10,7 +10,7 @@ def crop(img, center, size):
 
     Parameters
     ----------
-    img : np.ndarray
+    img : PIL.Image.Image
         The image to be cropped.
     center: np.ndarray
 
