@@ -27,8 +27,8 @@ class HudlTracker(Tracker):
         state_dict = torch.load(resume)
         self.model.load_state_dict(state_dict)
 
-        self.model.eval()
-        self.model.cuda()
+        self.model = self.model.eval()
+        self.model = self.model.cuda()
 
         # TODO: Find a better way to set this up. They need to be the same
         # as the one used to train the model
@@ -73,7 +73,7 @@ class HudlTracker(Tracker):
         context = crop(context, self.context_center, context_crop_size)
         context = context.resize(self.context_size, resample=Image.BICUBIC)
         context = transforms.ToTensor()(context)
-        context = Variable(context, volatile=True)[None]
+        context = Variable(context, volatile=True).unsqueeze(0)
         self.context = context.cuda()
 
         self.search_ratio = self.search_crop_size / self.search_size
@@ -106,7 +106,7 @@ class HudlTracker(Tracker):
         search = crop(img, self.context_center, self.search_crop_size)
         search = search.resize(self.search_size, resample=Image.BICUBIC)
         search = transforms.ToTensor()(search)
-        search = Variable(search, volatile=True)[None]
+        search = Variable(search, volatile=True).unsqueeze(0)
         search = search.cuda()
 
         (_, response,
