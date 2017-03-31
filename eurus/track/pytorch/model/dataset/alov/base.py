@@ -3,8 +3,9 @@ import csv
 
 import numpy as np
 
-from track.pytorch.model.dataset.base import TrackingDataset
-from track.pytorch.model.dataset.widgets.exception import IPythonWidgetsMissingError
+from eurus.track.pytorch.model.dataset.base import TrackingDataset
+from eurus.track.pytorch.model.dataset.widgets.exception import (
+    IPythonWidgetsMissingError)
 
 
 class Alov300(TrackingDataset):

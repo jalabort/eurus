@@ -3,7 +3,7 @@ import csv
 
 import numpy as np
 
-from track.pytorch.model.dataset.base import TrackingDataset
+from eurus.track.pytorch.model.dataset.base import TrackingDataset
 
 
 class Vot2016(TrackingDataset):
