@@ -3,8 +3,8 @@ import csv
 
 import numpy as np
 
-from .base import TrackingDataset
-from .widgets.exception import IPythonWidgetsMissingError
+from track.pytorch.model.dataset.base import TrackingDataset
+from track.pytorch.model.dataset.widgets.exception import IPythonWidgetsMissingError
 
 
 class Alov300(TrackingDataset):
