@@ -35,8 +35,8 @@ class ForwardTracker(Tracker):
         self.grid = np.mgrid[:256, :256]
         self.context_factor = 3
         self.search_factor = 2
-        self.context_size = (128, 128)
-        self.search_size = (256, 256)
+        self.context_size = np.array((128, 128))
+        self.search_size = np.array((256, 256))
 
         self.box = None
         self.context_center = None
@@ -122,7 +122,7 @@ class ForwardTracker(Tracker):
 
         # scaled_peak = self.model.module.stride * peak
 
-        offset = peak - self.context_size
+        offset = peak * 8 - self.search_size / 2
         self.context_center = self.context_center + offset[::-1] * self.search_ratio
 
         self.box[:2] = self.context_center - self.box[2:] / 2

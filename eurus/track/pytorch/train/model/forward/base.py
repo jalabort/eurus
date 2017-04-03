@@ -28,10 +28,10 @@ class ForwardTrackingModel(TrackingModel):
         self.bn24 = nn.BatchNorm2d(16)
         self.bn25 = nn.BatchNorm2d(16)
 
-        self.bn1 = nn.BatchNorm1d(256)
+        self.bn1 = nn.BatchNorm1d(512)
 
-        self.fc1 = nn.Linear(3712, 256)
-        self.fc2 = nn.Linear(256, 65536)
+        self.fc1 = nn.Linear(3712, 512)
+        self.fc2 = nn.Linear(512, 1089)
 
     def forward(self, x1, x2):
         r"""
@@ -61,6 +61,6 @@ class ForwardTrackingModel(TrackingModel):
         y = F.relu(self.bn1(self.fc1(x)))
         y = self.fc2(y)
 
-        y = y.view(-1, 1, 256, 256)
+        y = y.view(-1, 1, 33, 33)
 
         return y

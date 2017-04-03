@@ -4,3 +4,5 @@ from .model import (
     ForwardTrackingModel, ForwardTrackingModelConfig,
     RecurrentTrackingModel, RecurrentTrackingModelConfig,
     create_tracking_model)
+from .base import train_tracking_model
+from .config import TrainTrackingModelConfig, DataLoaderConfig, CrayonConfig
