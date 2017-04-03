@@ -3,6 +3,8 @@ import csv
 
 import numpy as np
 
+import torchvision.transforms as transforms
+
 from eurus.track.pytorch.train.dataset.base import TrackingDataset
 
 
@@ -31,15 +33,17 @@ class Uav123(TrackingDataset):
     ----------
     M. Mueller, et al. "A Benchmark and Simulator for UAV Tracking". ECCV 2016.
     """
-    def __init__(self, root, transform=None, target_transform=None,
-                 sequence_length=None, skip=None, context_factor=3,
-                 search_factor=2, context_size=128, search_size=256):
+    def __init__(self, root, transform=transforms.ToTensor(),
+                 target_transform=None, sequence_length=None, skip=None,
+                 context_factor=3, search_factor=2, context_size=128,
+                 search_size=256, response_size=33):
 
         super(Uav123, self).__init__(
             root, transform=transform, target_transform=target_transform,
             sequence_length=sequence_length, skip=skip,
             context_factor=context_factor, search_factor=search_factor,
-            context_size=context_size, search_size=search_size)
+            context_size=context_size, search_size=search_size,
+            response_size=response_size)
 
         img_path = os.path.join(root, 'data_seq', 'UAV123')
         ann_path = os.path.join(root, 'anno', 'UAV123')

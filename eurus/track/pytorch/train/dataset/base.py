@@ -7,6 +7,8 @@ from scipy.stats import multivariate_normal
 from PIL import Image
 from torch.utils.data import Dataset
 
+from torchvision import transforms
+
 from .utils import crop, display_1d_histogram
 from .widgets.exception import IPythonWidgetsMissingError
 
@@ -27,10 +29,12 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
 
     search_factor : float, optional
 
-    context_size : int, optional
+    context_size : int | (int, int), optional
 
-    search_size : int, optional
+    search_size : int | (int, int), optional
 
+    response_size : int | (int, int), optional
+    
 
     References
     ----------
@@ -38,7 +42,8 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
     """
     def __init__(self, root, transform=None, target_transform=None,
                  sequence_length=None, skip=None, context_factor=3,
-                 search_factor=2, context_size=128, search_size=256):
+                 search_factor=2, context_size=128, search_size=256,
+                 response_size=33):
 
         self.root = root
         self.transform = transform
@@ -65,6 +70,14 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
             self.search_size = np.array(search_size).astype(np.int32)
         else:
             raise ValueError('`context_size` must be `int` or `(int, int)`.')
+
+        if isinstance(response_size, numbers.Number):
+            self.response_size = np.array([response_size,
+                                           response_size]).astype(np.int32)
+        elif isinstance(response_size, tuple):
+            self.response_size = np.array(response_size).astype(np.int32)
+        else:
+            raise ValueError('`response_size` must be `int` or `(int, int)`.')
 
     @property
     @abstractmethod
@@ -172,6 +185,14 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
             pos[:, :, 1] = x
             rv = multivariate_normal(mean, cov)
             score_map = rv.pdf(pos)
+            max_score = np.max(score_map)
+            min_score = np.min(score_map)
+            score_map = 255 * (score_map - min_score) / (max_score - min_score)
+            score_map = transforms.ToPILImage()(score_map[..., None].astype(
+                np.int32))
+            score_map = score_map.resize(self.response_size,
+                                         resample=Image.BICUBIC)
+            score_map = np.array(score_map)
 
             context_box = context_box.astype(np.float32)
             search_box = search_box.astype(np.float32)
@@ -185,7 +206,7 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
                 context_box = self.target_transform(context_box)
                 search_box = self.target_transform(search_box)
                 search_context_box = self.target_transform(search_context_box)
-                score_map = self.target_transform(score_map)
+                score_map = self.transform(score_map)
 
             yield (context, search,
                    context_box, search_box,

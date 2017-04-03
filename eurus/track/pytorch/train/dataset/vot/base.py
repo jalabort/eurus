@@ -3,6 +3,8 @@ import csv
 
 import numpy as np
 
+import torchvision.transforms as transforms
+
 from eurus.track.pytorch.train.dataset.base import TrackingDataset
 
 
@@ -32,15 +34,17 @@ class Vot2016(TrackingDataset):
     M. Kristan, et al. "The Visual Object Tracking VOT2016 challenge results".
     ECCV 2016.
     """
-    def __init__(self, root, transform=None, target_transform=None,
-                 sequence_length=None, skip=None, context_factor=3,
-                 search_factor=2, context_size=128, search_size=256):
+    def __init__(self, root, transform=transforms.ToTensor(),
+                 target_transform=None, sequence_length=None, skip=None,
+                 context_factor=3, search_factor=2, context_size=128,
+                 search_size=256, response_size=33):
 
         super(Vot2016, self).__init__(
             root, transform=transform, target_transform=target_transform,
             sequence_length=sequence_length, skip=skip,
             context_factor=context_factor, search_factor=search_factor,
-            context_size=context_size, search_size=search_size)
+            context_size=context_size, search_size=search_size,
+            response_size=response_size)
 
         sequences = sorted(next(os.walk(root))[1])
         paths = [os.path.join(root, d) for d in sequences]

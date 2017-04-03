@@ -18,16 +18,6 @@ class DatasetConfig(Config):
 
     @property
     @config_value
-    def normalize(self):
-        r"""
-        Whether to normalize the input images or not.
-        
-        :rtype: bool
-        """
-        return False
-
-    @property
-    @config_value
     def sequence_length(self):
         r"""
         The length of the dataset sequences. If `None` or larger than the 
@@ -85,4 +75,13 @@ class DatasetConfig(Config):
         :rtype: int | (int, int)
         """
         return 256
+
+    @property
+    @config_value
+    def response_size(self):
+        r"""
+
+        :rtype: int | (int, int)
+        """
+        return 33
 
