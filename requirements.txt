@@ -9,6 +9,9 @@ torch
 torchvision
 pillow
 
+requests
+pycrayon
+
 matplotlib
 jupyter
 ipywidgets
