@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+# encoding: utf-8
+r"""
+CLI for training tracking models.
+
+Usage:
+  train_tracking_model -f <config_file>
+  train_tracking_model (-h | --help)
+
+Options:
+  -f <config_file>  Path to config file.
+  -h --help         Show this screen.
+"""
+from docopt import docopt
+
+from eurus.track.pytorch.train import (
+    train_tracking_model, TrainTrackingModelConfig)
+
+
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    config_path = args['-f']
+    config = TrainTrackingModelConfig.init_from_file(config_path)
+    train_tracking_model(config)
