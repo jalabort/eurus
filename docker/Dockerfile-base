@@ -49,7 +49,7 @@ RUN make -j 8 && make install && \
 
 RUN ln /dev/null /dev/raw1394
 
-RUN conda install -c soumith pytorch=0.1.10 torchvision cuda80 -y
+RUN conda install -c soumith pytorch=0.1.11 torchvision cuda80 -y
 
 RUN mkdir -p /root/.pip/ && printf "[global]\nindex-url = http://pypi.hudltools.com\ntrusted-host = pypi.hudltools.com\n" >> /root/.pip/pip.conf
 
