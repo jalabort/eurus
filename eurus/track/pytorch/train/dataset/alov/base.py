@@ -1,16 +1,15 @@
 import os
 import csv
+from abc import ABCMeta
 
 import numpy as np
-
-import torchvision.transforms as transforms
 
 from eurus.track.pytorch.train.dataset.base import TrackingDataset
 from eurus.track.pytorch.train.dataset.widgets.exception import (
     IPythonWidgetsMissingError)
 
 
-class Alov300(TrackingDataset):
+class Alov(TrackingDataset, metaclass=ABCMeta):
     r"""
     Class for the Amsterdam Library of Ordinary Videos (ALOV) 300 dataset.
 
@@ -36,14 +35,12 @@ class Alov300(TrackingDataset):
     A. W. Smeulders, et al. "Visual tracking: An experimental survey".
     TPAMI 2013.
     """
-    def __init__(self, root, transform=transforms.ToTensor(),
-                 target_transform=None, sequence_length=None, skip=None,
+    def __init__(self, root, transform=None, target_transform=None,
                  context_factor=3, search_factor=2, context_size=128,
                  search_size=256, response_size=33):
 
-        super(Alov300, self).__init__(
+        super(Alov, self).__init__(
             root, transform=transform, target_transform=target_transform,
-            sequence_length=sequence_length, skip=skip,
             context_factor=context_factor, search_factor=search_factor,
             context_size=context_size, search_size=search_size,
             response_size=response_size)
@@ -107,62 +104,16 @@ class Alov300(TrackingDataset):
                     'sequence {} of group {} should be the same.'.format(
                         len(img_list3), len(ann_list3), j, i)
 
-        if sequence_length is None:
-            self.sequence_length = self.n_shortest - 1
-
     @property
     def _n_elements_per_sequence(self):
         return [len(sequence) for group in self.img_list for sequence in group]
-
-    def __len__(self):
-        n_sequences = 0
-        for img_group in self.img_list:
-            n_sequences += len(img_group)
-        return n_sequences
 
     def view_original(self):
         r"""
         Visualize the original unprocessed dataset.
         """
         try:
-            from .widgets import notebook_view_group
+            from eurus.track.pytorch.train.dataset.widgets import notebook_view_group
             notebook_view_group(self.img_list, self.ann_list)
         except ImportError:
             raise IPythonWidgetsMissingError()
-
-    def _get_sequence_from_index(self, index):
-        r"""
-
-
-        Parameters
-        ----------
-        index :
-
-
-        Returns
-        -------
-        sequences : (list[np.ndarray], list[np.ndarray])
-
-        """
-        if index < 0 or index > len(self):
-            raise ValueError('The requested `index`, {}, is not valid. '
-                             'Valid indices go from 0 to {}. '
-                             .format(index, len(self)))
-
-        aux_index = 0
-        found = False
-        for img_group, ann_group in zip(self.img_list, self.ann_list):
-            for img_sequence, ann_sequence in zip(img_group, ann_group):
-                if aux_index == index:
-                    found = True
-                    break
-                aux_index += 1
-            if found:
-                break
-
-        first = np.random.randint(
-            0, len(img_sequence) - self.sequence_length * self.skip)
-        last = first + self.sequence_length * self.skip
-
-        return (img_sequence[first:last:self.skip],
-                ann_sequence[first:last:self.skip])

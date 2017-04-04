@@ -68,7 +68,7 @@ class CrayonConfig(Config):
         
         :rtype: str
         """
-        return self.RequiredConfig()
+        return None
 
 
 class TrainTrackingModelConfig(Config):
@@ -81,7 +81,7 @@ class TrainTrackingModelConfig(Config):
         r"""
         Configuration for :class:`eurus.track.pytorch.train.Dataset`.
         
-        :rtype: :class:`eurus.track.pytorch.train.DatasetConfig`
+        :rtype: :class:`eurus.track.pytorch.train.TrackingDatasetConfig`
         """
         return self.RequiredConfig()
 
@@ -91,7 +91,7 @@ class TrainTrackingModelConfig(Config):
         r"""
         Configuration for :class:`torch.utils.data.DataLoader`.
         
-        :rtype: :class:`eurus.track.pytorch.train.config.DatasetConfig`
+        :rtype: :class:`eurus.track.pytorch.train.config.TrackingDatasetConfig`
         """
         return DataLoaderConfig()
 

@@ -1,2 +1,3 @@
-from .base import Vot2016
-from .config import Vot2016Config
+from .pair import VotPair
+from .sequence import VotSequence
+from .config import VotPairConfig, VotSequenceConfig

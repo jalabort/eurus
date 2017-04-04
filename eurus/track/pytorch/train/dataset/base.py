@@ -34,23 +34,15 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
     search_size : int | (int, int), optional
 
     response_size : int | (int, int), optional
-    
-
-    References
-    ----------
-    M. Mueller, et al. "A Benchmark and Simulator for UAV Tracking". ECCV 2016.
+        
     """
     def __init__(self, root, transform=None, target_transform=None,
-                 sequence_length=None, skip=None, context_factor=3,
-                 search_factor=2, context_size=128, search_size=256,
-                 response_size=33):
+                 context_factor=3, search_factor=2, context_size=128,
+                 search_size=256, response_size=33):
 
         self.root = root
         self.transform = transform
         self.target_transform = target_transform
-        self.sequence_length = sequence_length
-        if skip is None:
-            self.skip = 1
 
         self.context_factor = context_factor
         self.search_factor = search_factor
@@ -105,112 +97,107 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
         raise NotImplemented
 
     @abstractmethod
-    def _get_sequence_from_index(self, index):
-        r"""
-
-
-        Parameters
-        ----------
-        index :
-
-
-        Returns
-        -------
-        sequences : (list[np.ndarray], list[np.ndarray])
-
-        """
+    def __getitem__(self, index):
         raise NotImplemented
 
-    def __getitem__(self, index):
-        img_sequence, ann_sequence = self._get_sequence_from_index(index)
+    def _create_training_pair(self, img0, img1, img0_box, img1_box):
+        r"""
+        
+        
+        Parameters
+        ----------
+        img0 : 
+        img1 :
+        img0_box :
+        img1_box :
+ 
+        Returns
+        -------
+        training_data : 
+        
+        """
+        if img0.mode == 'L':
+            img0 = img0.convert(mode='RGB')
 
-        for i in range(len(img_sequence) - 1):
-            img1 = Image.open(img_sequence[i])
-            if img1.mode == 'L':
-                img1 = img1.convert(mode='RGB')
-            img1_box = ann_sequence[i]
+        img0_tl = img0_box[:2]
+        img0_sz = img0_box[2:]
+        img0_center = img0_tl + img0_sz / 2
 
-            img1_tl = img1_box[:2]
-            img1_sz = img1_box[2:]
-            img1_center = img1_tl + img1_sz / 2
+        max_sz = max(img0_sz)
+        img0_crop_size = np.array([max_sz, max_sz]) * self.context_factor
 
-            max_sz = max(img1_sz)
-            img1_crop_size = np.array([max_sz, max_sz]) * self.context_factor
+        img0_center += np.random.randn(2) * 0.01 * img0_crop_size
+        img0_crop_size += np.random.randn(2) * 0.05 * img0_crop_size
 
-            img1_center += np.random.randn(2) * 0.01 * img1_crop_size
-            img1_crop_size += np.random.randn(2) * 0.05 * img1_crop_size
+        context = crop(img0, img0_center, img0_crop_size)
+        context = context.resize(self.context_size, resample=Image.BICUBIC)
 
-            context = crop(img1, img1_center, img1_crop_size)
-            context = context.resize(self.context_size, resample=Image.BICUBIC)
+        ratio0 = img0_crop_size / self.context_size
+        corrector = img0_center - img0_crop_size / 2
+        context_tl = (img0_box[:2] - corrector) / ratio0
+        context_sz = img0_box[2:] / ratio0
+        context_box = np.concatenate([context_tl, context_sz])
 
-            ratio1 = img1_crop_size / self.context_size
-            corrector = img1_center - img1_crop_size / 2
-            context_tl = (img1_box[:2] - corrector) / ratio1
-            context_sz = img1_box[2:] / ratio1
-            context_box = np.concatenate([context_tl, context_sz])
+        if img1.mode == 'L':
+            img1 = img0.convert(mode='RGB')
 
-            img2 = Image.open(img_sequence[i + 1])
-            if img2.mode == 'L':
-                img2 = img1.convert(mode='RGB')
-            img2_box = ann_sequence[i + 1]
+        img1_crop_size = img0_crop_size * self.search_factor
 
-            img2_crop_size = img1_crop_size * self.search_factor
+        search = crop(img1, img0_center, img1_crop_size)
+        search = search.resize(self.search_size, resample=Image.BICUBIC)
 
-            search = crop(img2, img1_center, img2_crop_size)
-            search = search.resize(self.search_size, resample=Image.BICUBIC)
+        ratio1 = img1_crop_size / self.search_size
 
-            ratio2 = img2_crop_size / self.search_size
+        corrector = img0_center - img1_crop_size / 2
+        search_tl = (img1_box[:2] - corrector) / ratio1
+        search_sz = img1_box[2:] / ratio1
+        search_box = np.concatenate([search_tl, search_sz])
 
-            corrector = img1_center - img2_crop_size / 2
-            search_tl = (img2_box[:2] - corrector) / ratio2
-            search_sz = img2_box[2:] / ratio2
-            search_box = np.concatenate([search_tl, search_sz])
+        aux_tl = (img0_box[:2] - corrector) / ratio1
+        aux_sz = img0_box[2:] / ratio1
+        search_context_box = np.concatenate([aux_tl, aux_sz])
 
-            aux_tl = (img1_box[:2] - corrector) / ratio2
-            aux_sz = img1_box[2:] / ratio2
-            search_context_box = np.concatenate([aux_tl, aux_sz])
+        search_tr = search_tl + np.array([search_sz[0], 0])
+        search_br = search_tl + np.array([0, search_sz[1]])
+        search_bl = search_tl + search_sz
+        box_matrix = np.concatenate([[search_tl], [search_tr],
+                                     [search_br], [search_bl]])
 
-            search_tr = search_tl + np.array([search_sz[0], 0])
-            search_br = search_tl + np.array([0, search_sz[1]])
-            search_bl = search_tl + search_sz
-            box_matrix = np.concatenate([[search_tl], [search_tr],
-                                         [search_br], [search_bl]])
+        mean = search_tl + search_sz / 2
+        cov = np.cov(box_matrix, rowvar=False)
 
-            mean = search_tl + search_sz / 2
-            cov = np.cov(box_matrix, rowvar=False)
+        x, y = np.mgrid[:search.size[1], :search.size[0]]
+        pos = np.empty(x.shape + (2,))
+        pos[:, :, 0] = y
+        pos[:, :, 1] = x
+        rv = multivariate_normal(mean, cov)
+        score_map = rv.pdf(pos)
+        max_score = np.max(score_map)
+        min_score = np.min(score_map)
+        score_map = 255 * (score_map - min_score) / (max_score - min_score)
+        score_map = transforms.ToPILImage()(
+            score_map[..., None].astype(np.int32))
+        score_map = score_map.resize(self.response_size,
+                                     resample=Image.BICUBIC)
+        score_map = np.array(score_map)
 
-            x, y = np.mgrid[:search.size[1], :search.size[0]]
-            pos = np.empty(x.shape + (2,))
-            pos[:, :, 0] = y
-            pos[:, :, 1] = x
-            rv = multivariate_normal(mean, cov)
-            score_map = rv.pdf(pos)
-            max_score = np.max(score_map)
-            min_score = np.min(score_map)
-            score_map = 255 * (score_map - min_score) / (max_score - min_score)
-            score_map = transforms.ToPILImage()(score_map[..., None].astype(
-                np.int32))
-            score_map = score_map.resize(self.response_size,
-                                         resample=Image.BICUBIC)
-            score_map = np.array(score_map)
+        context_box = context_box.astype(np.float32)
+        search_box = search_box.astype(np.float32)
+        search_context_box = search_context_box.astype(np.float32)
+        score_map = score_map.astype(np.float32)
 
-            context_box = context_box.astype(np.float32)
-            search_box = search_box.astype(np.float32)
-            search_context_box = search_context_box.astype(np.float32)
-            score_map = score_map.astype(np.float32)
+        if self.transform is not None:
+            context = self.transform(context)
+            search = self.transform(search)
+        if self.target_transform is not None:
+            context_box = self.target_transform(context_box)
+            search_box = self.target_transform(search_box)
+            search_context_box = self.target_transform(search_context_box)
+            score_map = self.transform(score_map)
 
-            if self.transform is not None:
-                context = self.transform(context)
-                search = self.transform(search)
-            if self.target_transform is not None:
-                context_box = self.target_transform(context_box)
-                search_box = self.target_transform(search_box)
-                search_context_box = self.target_transform(search_context_box)
-                score_map = self.transform(score_map)
-
-            yield (context, search,
-                   context_box, search_box,
-                   search_context_box, score_map)
+        return (context, search,
+                context_box, search_box,
+                search_context_box, score_map)
 
     def view_original(self):
         r"""
@@ -241,3 +228,142 @@ class TrackingDataset(Dataset, metaclass=ABCMeta):
                         self.n_longest,
                         self.n_average,
                         self.n_median))
+
+
+class PairDataset(TrackingDataset, metaclass=ABCMeta):
+    r"""
+    Base class for pair datasets.
+
+    Parameters
+    ----------
+    root : str
+        The root path to the dataset.
+    transform :
+
+    target_transform :
+
+    context_factor : float, optional
+
+    search_factor : float, optional
+
+    context_size : int | (int, int), optional
+
+    search_size : int | (int, int), optional
+
+    response_size : int | (int, int), optional
+
+
+    References
+    ----------
+    M. Mueller, et al. "A Benchmark and Simulator for UAV Tracking". ECCV 2016.
+    """
+
+    def __init__(self, root, transform=None, target_transform=None,
+                 offset=10, context_factor=3, search_factor=2,
+                 context_size=128, search_size=256, response_size=33):
+
+        super(PairDataset, self).__init__(
+            root, transform=transform, target_transform=target_transform,
+            context_factor=context_factor, search_factor=search_factor,
+            context_size=context_size, search_size=search_size,
+            response_size=response_size)
+
+        self.offset = offset
+
+    @abstractmethod
+    def _get_pair_from_index(self, index):
+        r"""
+        Get a pair of images and annotations from the same sequence.
+
+        Parameters
+        ----------
+        index : int
+            The index from which to retrieve the image and annotations pairs.
+
+        Returns
+        -------
+        pair : ((np.ndarray, np.ndarray), (np.ndarray, np.ndarray))
+
+        """
+        raise NotImplemented
+
+    def __getitem__(self, index):
+        img_pair, ann_pair = self._get_pair_from_index(index)
+
+        return self._create_training_pair(
+            Image.open(img_pair[0]),
+            Image.open(img_pair[1]),
+            ann_pair[0],
+            ann_pair[1]
+        )
+
+
+class SequenceDataset(TrackingDataset, metaclass=ABCMeta):
+    r"""
+    Base class for tracking datasets.
+
+    Parameters
+    ----------
+    root : str
+        The root path to the dataset.
+    transform :
+
+    target_transform :
+
+    context_factor : float, optional
+
+    search_factor : float, optional
+
+    context_size : int | (int, int), optional
+
+    search_size : int | (int, int), optional
+
+    response_size : int | (int, int), optional
+    
+
+    References
+    ----------
+    M. Mueller, et al. "A Benchmark and Simulator for UAV Tracking". ECCV 2016.
+    """
+    def __init__(self, root, transform=None, target_transform=None,
+                 sequence_length=None, skip=None, context_factor=3,
+                 search_factor=2, context_size=128, search_size=256,
+                 response_size=33):
+
+        super(SequenceDataset, self).__init__(
+            root, transform=transform, target_transform=target_transform,
+            context_factor=context_factor, search_factor=search_factor,
+            context_size=context_size, search_size=search_size,
+            response_size=response_size)
+
+        self.sequence_length = sequence_length
+        if skip is None:
+            self.skip = 1
+
+    @abstractmethod
+    def _get_sequence_from_index(self, index):
+        r"""
+
+
+        Parameters
+        ----------
+        index :
+
+
+        Returns
+        -------
+        sequences : (list[np.ndarray], list[np.ndarray])
+
+        """
+        raise NotImplemented
+
+    def __getitem__(self, index):
+        img_sequence, ann_sequence = self._get_sequence_from_index(index)
+
+        for i in range(len(img_sequence) - 1):
+            yield self._create_training_pair(
+                Image.open(img_sequence[i]),
+                Image.open(img_sequence[i + 1]),
+                ann_sequence[i],
+                ann_sequence[i + 1]
+            )

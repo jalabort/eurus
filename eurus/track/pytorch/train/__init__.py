@@ -1,5 +1,7 @@
 from .dataset import (
-    Alov300, Alov300Config, Uav123, Uav123Config, Vot2016, Vot2016Config)
+    AlovPair, AlovSequence, AlovPairConfig, AlovSequenceConfig,
+    UavPair, UavSequence, UavPairConfig, UavSequenceConfig,
+    VotPair, VotSequence, VotPairConfig, VotSequenceConfig)
 from .model import (
     ForwardTrackingModel, ForwardTrackingModelConfig,
     RecurrentTrackingModel, RecurrentTrackingModelConfig,

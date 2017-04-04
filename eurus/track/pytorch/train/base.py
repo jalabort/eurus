@@ -11,6 +11,7 @@ from pycrayon import CrayonClient
 
 from .dataset import create_dataset
 from .model import create_tracking_model
+from .utils import AverageMeter
 
 
 logging.basicConfig(
@@ -50,11 +51,18 @@ def train_tracking_model(config):
     optimizer = optim.SGD(model.parameters(), lr=config.lr)
 
     for epoch in range(1, config.n_epochs + 1):
-        training_loop(epoch, dataloader, model, criterion, optimizer,
-                      crayon_logger)
+        loss_meter, time_meter = training_loop(
+            epoch, dataloader, model, criterion, optimizer, crayon_logger)
 
         logger.info(
-            'Epoch: {0:05d} completed'.format(epoch))
+            'Epoch: {0:05d} completed \t'
+            'Average Loss: {1:4.4f}'.format(
+                epoch,
+                loss_meter.avg))
+
+        if crayon_logger is not None:
+            crayon_logger.add_scalar_value('loss_epochs', loss_meter.avg)
+            crayon_logger.add_scalar_value('time_epochs', time_meter.avg)
 
         torch.save(model.state_dict(), config.weights_file)
 
@@ -76,10 +84,23 @@ def training_loop(epoch, dataloader, model, criterion, optimizer,
         The optimizer.
     criterion :
         The loss function.
+    crayon_logger :
+        The loss function.
+        
+    Returns
+    -------
+    meters: (:class:`eurus.track.pytorch.train.AverageMeter`, 
+             :class:`eurus.track.pytorch.train.AverageMeter`)
     """
+    loss_meter = AverageMeter()
+    time_meter = AverageMeter()
+
     model.train()
 
+    end = time.time()
     for i, data_sequence in enumerate(dataloader):
+        # optimizer.zero_grad()
+        # loss = Variable(torch.zeros([1]))
 
         for j, data in enumerate(data_sequence):
             optimizer.zero_grad()
@@ -94,6 +115,7 @@ def training_loop(epoch, dataloader, model, criterion, optimizer,
                 x1 = x1.cuda()
                 x2 = x2.cuda()
                 t = t.cuda()
+                # loss = loss.cuda()
 
             y = model(x1, x2)
             loss = criterion(y, t)
@@ -101,13 +123,28 @@ def training_loop(epoch, dataloader, model, criterion, optimizer,
             loss.backward()
             optimizer.step()
 
-        logger.info('Epoch: {0:05d} [{1:06d}/{2:05d} ({3:2.0f}%)]\t'
-                    'Loss: {4:4.4f}'.format(
-                        epoch,
-                        i * x1.size()[0],
-                        len(dataloader.dataset),
-                        100. * i / len(dataloader),
-                        loss.data[0]))
+            loss_meter.update(loss.data[0])
+            time_meter.update(time.time() - end)
+
+            end = time.time()
+
+            logger.info('Epoch: {0:06d} [{1:06d}/{2:06d} ({3:2.0f}%)]\t'
+                        'Loss: {4:6.4f} [{5:6.4f}]\t'
+                        'Time: {6:6.4f} [{7:6.4f}]\t'
+                        'i: {8} j:{9}]\t'.format(
+                            epoch,
+                            i * x1.size()[0],
+                            len(dataloader.dataset),
+                            100. * i / len(dataloader),
+                            loss_meter.val,
+                            loss_meter.avg,
+                            time_meter.val,
+                            time_meter.avg,
+                            i,
+                            j))
 
         if crayon_logger is not None:
-            crayon_logger.add_scalar_value('loss', loss.data[0])
+            crayon_logger.add_scalar_value('loss_iters', loss_meter.val)
+            crayon_logger.add_scalar_value('time_iters', time_meter.val)
+
+    return loss_meter, time_meter

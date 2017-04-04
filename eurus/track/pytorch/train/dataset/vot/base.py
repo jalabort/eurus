@@ -1,14 +1,13 @@
 import os
 import csv
+from abc import ABCMeta
 
 import numpy as np
-
-import torchvision.transforms as transforms
 
 from eurus.track.pytorch.train.dataset.base import TrackingDataset
 
 
-class Vot2016(TrackingDataset):
+class Vot(TrackingDataset, metaclass=ABCMeta):
     r"""
     Class for the Visual Object Tracking (VOT) 2016 dataset.
 
@@ -19,8 +18,6 @@ class Vot2016(TrackingDataset):
     transform :
 
     target_transform :
-
-    sequence_length : int, optional
 
     search_factor : float, optional
 
@@ -34,14 +31,12 @@ class Vot2016(TrackingDataset):
     M. Kristan, et al. "The Visual Object Tracking VOT2016 challenge results".
     ECCV 2016.
     """
-    def __init__(self, root, transform=transforms.ToTensor(),
-                 target_transform=None, sequence_length=None, skip=None,
+    def __init__(self, root, transform=None, target_transform=None,
                  context_factor=3, search_factor=2, context_size=128,
                  search_size=256, response_size=33):
 
-        super(Vot2016, self).__init__(
+        super(Vot, self).__init__(
             root, transform=transform, target_transform=target_transform,
-            sequence_length=sequence_length, skip=skip,
             context_factor=context_factor, search_factor=search_factor,
             context_size=context_size, search_size=search_size,
             response_size=response_size)
@@ -85,41 +80,6 @@ class Vot2016(TrackingDataset):
                 'in sequences {} should be the same.'.format(
                     len(img_list2), len(ann_list2), i)
 
-        if sequence_length is None:
-            self.sequence_length = self.n_shortest - 1
-
     @property
     def _n_elements_per_sequence(self):
         return [len(sequence) for sequence in self.img_list]
-
-    def __len__(self):
-        return len(self.img_list)
-
-    def _get_sequence_from_index(self, index):
-        r"""
-
-
-        Parameters
-        ----------
-        index :
-
-
-        Returns
-        -------
-        sequences : (list[np.ndarray], list[np.ndarray])
-
-        """
-        if index < 0 or index > len(self):
-            raise ValueError('The requested `index`, {}, is not valid. '
-                             'Valid indices go from 0 to {}. '
-                             .format(index, len(self)))
-
-        img_sequence = self.img_list[index]
-        ann_sequence = self.ann_list[index]
-
-        first = np.random.randint(
-            0, len(img_sequence) - self.sequence_length * self.skip)
-        last = first + self.sequence_length * self.skip
-
-        return (img_sequence[first:last:self.skip],
-                ann_sequence[first:last:self.skip])

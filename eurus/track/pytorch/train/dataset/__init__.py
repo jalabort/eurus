@@ -1,4 +1,4 @@
-from .alov import Alov300, Alov300Config
-from .uav import Uav123, Uav123Config
-from .vot import Vot2016, Vot2016Config
+from .alov import AlovPair, AlovSequence, AlovPairConfig, AlovSequenceConfig
+from .uav import UavPair, UavSequence, UavPairConfig, UavSequenceConfig
+from .vot import VotPair, VotSequence, VotPairConfig, VotSequenceConfig
 from .factory import create_dataset

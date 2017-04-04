@@ -1,16 +1,15 @@
 import os
 import csv
+from abc import ABCMeta
 
 import numpy as np
-
-import torchvision.transforms as transforms
 
 from eurus.track.pytorch.train.dataset.base import TrackingDataset
 
 
-class Uav123(TrackingDataset):
+class Uav(TrackingDataset, metaclass=ABCMeta):
     r"""
-    Class for the Unmanned Aerial Vehicles (ALOV) 123 dataset.
+    Class for the Unmanned Aerial Vehicles (UAV) 123 dataset.
 
     Parameters
     ----------
@@ -33,14 +32,12 @@ class Uav123(TrackingDataset):
     ----------
     M. Mueller, et al. "A Benchmark and Simulator for UAV Tracking". ECCV 2016.
     """
-    def __init__(self, root, transform=transforms.ToTensor(),
-                 target_transform=None, sequence_length=None, skip=None,
+    def __init__(self, root, transform=None, target_transform=None,
                  context_factor=3, search_factor=2, context_size=128,
                  search_size=256, response_size=33):
 
-        super(Uav123, self).__init__(
+        super(Uav, self).__init__(
             root, transform=transform, target_transform=target_transform,
-            sequence_length=sequence_length, skip=skip,
             context_factor=context_factor, search_factor=search_factor,
             context_size=context_size, search_size=search_size,
             response_size=response_size)
@@ -84,15 +81,9 @@ class Uav123(TrackingDataset):
                 'in sequences {} should be the same.'.format(
                     len(img_list2), len(ann_list2), i)
 
-        if sequence_length is None:
-            self.sequence_length = self.n_shortest - 1
-
     @property
     def _n_elements_per_sequence(self):
         return [len(sequence) for sequence in self.img_list]
-
-    def __len__(self):
-        return len(self.img_list)
 
     def _get_sequence_from_index(self, index):
         r"""
@@ -100,7 +91,7 @@ class Uav123(TrackingDataset):
 
         Parameters
         ----------
-        index :
+        index : int
 
 
         Returns

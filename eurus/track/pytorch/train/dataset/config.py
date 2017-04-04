@@ -1,7 +1,7 @@
 from terrarium import Config, config_value
 
 
-class DatasetConfig(Config):
+class TrackingDatasetConfig(Config):
     r"""
     Configuration for creating a 
     :class:`eurus.track.pytorch.train.dataset.TrackingDataset`.
@@ -15,30 +15,6 @@ class DatasetConfig(Config):
         :rtype: str
         """
         return self.RequiredConfig()
-
-    @property
-    @config_value
-    def sequence_length(self):
-        r"""
-        The length of the dataset sequences. If `None` or larger than the 
-        length of the shortest sequence in the dataset this configuration 
-        value will be equal to the length of the shortest sequence in the 
-        dataset. 
-        
-        :rtype: int | None
-        """
-        return None
-
-    @property
-    @config_value
-    def skip(self):
-        r"""
-        The number of consecutive frames to skip when creating a sequence. 
-        If `None` no frames are skipped.
-        
-        :rtype: int | None
-        """
-        return None
 
     @property
     @config_value
@@ -84,4 +60,48 @@ class DatasetConfig(Config):
         :rtype: int | (int, int)
         """
         return 33
+
+
+class PairTrackingDatasetConfig(TrackingDatasetConfig):
+    r"""
+    Configuration for :class:`eurus.track.pytorch.train.dataset.PairDataset`.
+    """
+    @property
+    @config_value
+    def offset(self):
+        r"""
+       
+        :rtype: int | None
+        """
+        return 10
+
+
+class SequenceTrackingDatasetConfig(TrackingDatasetConfig):
+    r"""
+    Configuration for 
+    :class:`eurus.track.pytorch.train.dataset.SequenceDataset`.
+    """
+    @property
+    @config_value
+    def sequence_length(self):
+        r"""
+        The length of the dataset sequences. If `None` or larger than the 
+        length of the shortest sequence in the dataset this configuration 
+        value will be equal to the length of the shortest sequence in the 
+        dataset. 
+
+        :rtype: int | None
+        """
+        return None
+
+    @property
+    @config_value
+    def skip(self):
+        r"""
+        The number of consecutive frames to skip when creating a sequence. 
+        If `None` no frames are skipped.
+
+        :rtype: int | None
+        """
+        return None
 

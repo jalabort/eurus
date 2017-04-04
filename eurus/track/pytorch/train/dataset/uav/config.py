@@ -1,8 +1,32 @@
-from eurus.track.pytorch.train.dataset.config import DatasetConfig
+from terrarium import config_value
+from eurus.track.pytorch.train.dataset.config import (
+    TrackingDatasetConfig,
+    PairTrackingDatasetConfig,
+    SequenceTrackingDatasetConfig)
 
 
-class Uav123Config(DatasetConfig):
+class UavConfigTracking(TrackingDatasetConfig):
     r"""
-    Configuration for creating a 
-    :class:`eurus.track.pytorch.model.dataset.Uav123`.
+    Configuration for :class:`eurus.track.pytorch.train.dataset.Uav`.
+    """
+    @property
+    @config_value
+    def root(self):
+        r"""
+        Path to the dataset.
+
+        :rtype: str
+        """
+        return '/data1/joan/eurus/data/UAV123'
+
+
+class UavPairConfig(UavConfigTracking, PairTrackingDatasetConfig):
+    r"""
+    Configuration for :class:`eurus.track.pytorch.train.dataset.UavPair`.
+    """
+
+
+class UavSequenceConfig(UavConfigTracking, SequenceTrackingDatasetConfig):
+    r"""
+    Configuration for :class:`eurus.track.pytorch.train.dataset.UavSequence`.
     """

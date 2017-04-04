@@ -1,11 +1,13 @@
 from terrarium import config_value
-from eurus.track.pytorch.train.dataset.config import DatasetConfig
+from eurus.track.pytorch.train.dataset.config import (
+    TrackingDatasetConfig,
+    PairTrackingDatasetConfig,
+    SequenceTrackingDatasetConfig)
 
 
-class Vot2016Config(DatasetConfig):
+class VotConfigTracking(TrackingDatasetConfig):
     r"""
-    Configuration for creating a 
-    :class:`eurus.track.pytorch.train.dataset.Vot2016`.
+    Configuration for :class:`eurus.track.pytorch.train.dataset.Vot`.
     """
     @property
     @config_value
@@ -16,3 +18,15 @@ class Vot2016Config(DatasetConfig):
         :rtype: str
         """
         return '/data1/joan/eurus/data/vot2016'
+
+
+class VotPairConfig(VotConfigTracking, PairTrackingDatasetConfig):
+    r"""
+    Configuration for :class:`eurus.track.pytorch.train.dataset.VotPair`.
+    """
+
+
+class VotSequenceConfig(VotConfigTracking, SequenceTrackingDatasetConfig):
+    r"""
+    Configuration for :class:`eurus.track.pytorch.train.dataset.VotSequence`.
+    """
