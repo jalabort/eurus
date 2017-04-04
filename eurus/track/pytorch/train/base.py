@@ -56,19 +56,21 @@ def train_tracking_model(config):
 
         logger.info(
             'Epoch: {0:05d} completed \t'
-            'Average Loss: {1:4.4f}'.format(
+            'Average Loss: {1:4.4f} \t'
+            'Total time: {2:4.4f}'.format(
                 epoch,
-                loss_meter.avg))
+                loss_meter.avg,
+                time_meter.sum))
 
         if crayon_logger is not None:
             crayon_logger.add_scalar_value('loss_epochs', loss_meter.avg)
-            crayon_logger.add_scalar_value('time_epochs', time_meter.avg)
+            crayon_logger.add_scalar_value('time_epochs', time_meter.sum)
 
         torch.save(model.state_dict(), config.weights_file)
 
 
 def training_loop(epoch, dataloader, model, criterion, optimizer,
-                  crayon_logger):
+                  crayon_logger, logging_frequency=10):
     r"""
     Training loop for :class:`eurus.track.pytorch.train.TrackingModel`.
 
@@ -85,7 +87,8 @@ def training_loop(epoch, dataloader, model, criterion, optimizer,
     criterion :
         The loss function.
     crayon_logger :
-        The loss function.
+        
+    logging_frequency : int, optional
         
     Returns
     -------
@@ -98,53 +101,45 @@ def training_loop(epoch, dataloader, model, criterion, optimizer,
     model.train()
 
     end = time.time()
-    for i, data_sequence in enumerate(dataloader):
-        # optimizer.zero_grad()
-        # loss = Variable(torch.zeros([1]))
+    for i, data in enumerate(dataloader):
+        optimizer.zero_grad()
 
-        for j, data in enumerate(data_sequence):
-            optimizer.zero_grad()
+        context, search, _, search_box, context_box, response = data
 
-            x1, x2, _, search_box, context_box, t = data
+        context = Variable(context)
+        search = Variable(search)
+        response = Variable(response)
 
-            x1 = Variable(x1)
-            x2 = Variable(x2)
-            t = Variable(t)
+        if torch.cuda.is_available():
+            context = context.cuda()
+            search = search.cuda()
+            response = response.cuda()
 
-            if torch.cuda.is_available():
-                x1 = x1.cuda()
-                x2 = x2.cuda()
-                t = t.cuda()
-                # loss = loss.cuda()
+        output_response = model(context, search)
+        loss = criterion(output_response, response)
 
-            y = model(x1, x2)
-            loss = criterion(y, t)
+        loss.backward()
+        optimizer.step()
 
-            loss.backward()
-            optimizer.step()
+        loss_meter.update(loss.data[0])
+        time_meter.update(time.time() - end)
+        end = time.time()
 
-            loss_meter.update(loss.data[0])
-            time_meter.update(time.time() - end)
-
-            end = time.time()
-
-            logger.info('Epoch: {0:06d} [{1:06d}/{2:06d} ({3:2.0f}%)]\t'
-                        'Loss: {4:6.4f} [{5:6.4f}]\t'
-                        'Time: {6:6.4f} [{7:6.4f}]\t'
-                        'i: {8} j:{9}]\t'.format(
+        if i % logging_frequency == 0:
+            logger.info('Epoch: {0:05d} [{1:05d}/{2:05d} ({3:2.0f}%)]\t'
+                        'Loss: {4:5.4f} [{5:5.4f}]\t'
+                        'Time: {6:5.4f} [{7:5.4f}]'.format(
                             epoch,
-                            i * x1.size()[0],
+                            i * context.size()[0],
                             len(dataloader.dataset),
                             100. * i / len(dataloader),
                             loss_meter.val,
                             loss_meter.avg,
                             time_meter.val,
-                            time_meter.avg,
-                            i,
-                            j))
+                            time_meter.avg))
 
-        if crayon_logger is not None:
-            crayon_logger.add_scalar_value('loss_iters', loss_meter.val)
-            crayon_logger.add_scalar_value('time_iters', time_meter.val)
+            if crayon_logger is not None:
+                crayon_logger.add_scalar_value('loss_iters', loss_meter.val)
+                crayon_logger.add_scalar_value('time_iters', time_meter.val)
 
     return loss_meter, time_meter
